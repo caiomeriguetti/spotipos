@@ -4,7 +4,6 @@ import json
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 #loading provinces
-
 provincesData = json.loads(open('provinces.json').read())
 provincesKey = "province-data:"
 pipe = r.pipeline()
@@ -18,7 +17,6 @@ for provinceName in provincesData:
 	pipe.hset(provinceKey, 'bry', provinceData['boundaries']['bottomRight']['y'])
 pipe.execute()
 
-
 #loading properties
 
 propertiesData = json.loads(open('properties.json').read())
@@ -28,6 +26,7 @@ properties = propertiesData['properties']
 for propertie in properties:
 	propertieKey = propertiesKey + str(propertie['id'])
 	pipe.delete(propertieKey)
+	pipe.sadd('allids', propertie['id'])
 	pipe.hset(propertieKey, 'id', propertie['id'])
 	pipe.hset(propertieKey, 'x', propertie['x'])
 	pipe.hset(propertieKey, 'y', propertie['y'])
