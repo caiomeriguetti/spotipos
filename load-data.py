@@ -95,7 +95,7 @@ for propertie in properties:
 	
 	pipe.sadd("idsByPartition:" + partitionId, propertie['id'])
 
-	print k, partitionId
+	#print k, partitionId
 
 pipe.execute()
 
