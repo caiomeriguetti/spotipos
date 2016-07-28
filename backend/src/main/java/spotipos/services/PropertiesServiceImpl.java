@@ -13,6 +13,13 @@ public class PropertiesServiceImpl implements PropertiesService {
 	
 	public Propertie[] getProperties(Integer ax, Integer ay, Integer bx, Integer by) {
 		
+		List<String> allPartitions = jedis.lrange("allpartitions", 0, -1);
+		
+		for (String partitionId: allPartitions) {
+			Map<String, String> bounds = jedis.hgetAll("partition:" + partitionId);
+		}
+		
+		
 		Set<String> allIds = jedis.smembers("allids");
 		List<Propertie> properties = new ArrayList<Propertie>();
 		for(String id: allIds) {

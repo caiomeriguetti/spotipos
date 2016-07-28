@@ -23,7 +23,6 @@ public class PropertiesResource {
 						   @QueryParam("bx") Integer bx,
 						   @QueryParam("by") Integer by) {
 		
-		
 		SearchPropertiesResponse response = new SearchPropertiesResponse();
 		response.properties = propertiesService.getProperties(ax, ay, bx, by);
 		response.foundProperties = response.properties.length;
