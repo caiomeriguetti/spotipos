@@ -1,16 +1,42 @@
 package spotipos.tests;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.test.JerseyTest;
+import org.json.JSONObject;
+import org.junit.Test;
 
+import static org.junit.Assert.*;
 
 public class PropertiesResourceTest extends JerseyTest {
 	
 	public PropertiesResourceTest() {
         super(new spotipos.config.Application());
     }
+	
+	@Test
+	public void testCreate() throws Exception {
+		Invocation.Builder request = invocation(target().path("properties"));
+		JSONObject toBeCreated = new JSONObject();
+		toBeCreated.put("x", 10);
+		toBeCreated.put("y", 10);
+		toBeCreated.put("title", "Test title");
+		toBeCreated.put("description", "Test description");
+		toBeCreated.put("price", 10.50);
+		toBeCreated.put("beds", 1);
+		toBeCreated.put("baths", 3);
+		toBeCreated.put("squareMeters", 55);
+		
+		Response response = request.post(Entity.json(toBeCreated.toString()));
+		String jsonResponse = response.readEntity(String.class);
+		assertNotNull(jsonResponse);
+		JSONObject responseData = new JSONObject(jsonResponse);
+		assertTrue(responseData.getBoolean("success"));
+		assertNotNull(responseData.getString("newPropertieId"));
+	}
 	
 	private Invocation.Builder invocation(WebTarget target) {
 		Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON);
