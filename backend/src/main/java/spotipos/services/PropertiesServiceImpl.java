@@ -69,6 +69,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 	
 	public Propertie create(Propertie data) throws InvalidPropertieException {
 		
+		//validating propertie
 		String[] validation = validate(data);
 		
 		if (validation.length > 0) {
@@ -76,6 +77,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 			throw new InvalidPropertieException(validation, "Invalid Propertie");
 		}
 		
+		//creating new propertie
 		String newId = "prop-" + Long.toString(jedis.incr("idcounter"));
 		data.setId(newId);
 		
@@ -91,6 +93,31 @@ public class PropertiesServiceImpl implements PropertiesService {
 		pipe.hset(newPropertieKey, "price", Long.toString(data.getPrice()));
 		pipe.hset(newPropertieKey, "title", data.getTitle());
 		pipe.hset(newPropertieKey, "description", data.getDescription());
+		pipe.sync();
+		
+		//finding propertie partition
+		List<String> allPartitions = jedis.lrange("allpartitions", 0, -1);
+		Map<String, Response<Map<String, String>>> allPartitionsData = new HashMap<>();
+		for (String partitionId: allPartitions) { 
+			allPartitionsData.put(partitionId, pipe.hgetAll("partition:" + partitionId));
+		}
+		pipe.sync();
+		
+		for (String partitionId: allPartitionsData.keySet()) {
+			Map<String, String> partitionData = allPartitionsData.get(partitionId).get();
+			
+			int ulx = Integer.parseInt(partitionData.get("ulx"));
+			int uly = Integer.parseInt(partitionData.get("uly"));
+			
+			int brx = Integer.parseInt(partitionData.get("brx"));
+			int bry = Integer.parseInt(partitionData.get("bry"));
+			
+			if (isInside(data.getX(), data.getY(), ulx, uly, brx, bry)) {
+				pipe.sadd("idsByPartition:" + partitionId, data.getId());
+				pipe.sadd("allids", data.getId());
+			}
+		}
+		
 		pipe.sync();
 		
 		return data;
@@ -223,8 +250,6 @@ public class PropertiesServiceImpl implements PropertiesService {
 				continue;
 			}
 		}
-		
-		System.out.println(paritionsToSearch);
 		
 		Set<String> allIds = null;
 		for (String partitionId: paritionsToSearch) {
