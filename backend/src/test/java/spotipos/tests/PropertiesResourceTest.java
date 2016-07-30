@@ -31,11 +31,39 @@ public class PropertiesResourceTest extends JerseyTest {
 		toBeCreated.put("squareMeters", 55);
 		
 		Response response = request.post(Entity.json(toBeCreated.toString()));
+		
 		String jsonResponse = response.readEntity(String.class);
 		assertNotNull(jsonResponse);
+		
 		JSONObject responseData = new JSONObject(jsonResponse);
 		assertTrue(responseData.getBoolean("success"));
 		assertNotNull(responseData.getString("newPropertieId"));
+		
+		String id = responseData.getString("newPropertieId");
+		
+		request = invocation(target().path("properties/" + id));
+		response = request.get();
+		jsonResponse = response.readEntity(String.class);
+		
+		assertNotNull(jsonResponse);
+		
+		responseData = new JSONObject(jsonResponse);
+		
+		assertEquals(id, responseData.getString("id"));
+		assertEquals(toBeCreated.getInt("x"), responseData.getInt("x"));
+		assertEquals(toBeCreated.getInt("y"), responseData.getInt("y"));
+		assertEquals(toBeCreated.getString("title"), responseData.getString("title"));
+		assertEquals(toBeCreated.getString("description"), responseData.getString("description"));
+		assertEquals(toBeCreated.getLong("price"), responseData.getLong("price"));
+		assertEquals(toBeCreated.getInt("beds"), responseData.getInt("beds"));
+		assertEquals(toBeCreated.getInt("baths"), responseData.getInt("baths"));
+		assertEquals(toBeCreated.getInt("squareMeters"), responseData.getInt("squareMeters"));
+	}
+	
+	@Test
+	public void testSearch() throws Exception {
+		Invocation.Builder request = invocation(target().path("properties"));
+		
 	}
 	
 	private Invocation.Builder invocation(WebTarget target) {
