@@ -1,13 +1,16 @@
 package spotipos.rest;
 
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import spotipos.model.Propertie;
 import spotipos.model.SearchPropertiesResponse;
 import spotipos.services.PropertiesService;
 
@@ -28,6 +31,20 @@ public class PropertiesResource {
 		response.foundProperties = response.properties.length;
 		
 		return Response.ok().entity(response).build();
+	}
+	
+	@Path("{id}")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response search(@NotNull @PathParam("id") String id) {
+		
+		Propertie propertie = propertiesService.getPropertie(id);
+		
+		if (propertie == null) {
+			return Response.status(404).build();
+		}
+		
+		return Response.ok().entity(propertie).build();
 	}
 
 }

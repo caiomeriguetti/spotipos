@@ -22,6 +22,19 @@ public class PropertiesServiceImpl implements PropertiesService {
 		return false;
 	}
 	
+	public Propertie getPropertie(String id) {
+		Map<String, String> data = jedis.hgetAll("properties-data:" + id);
+		
+		if (data != null) {
+			Propertie p = new Propertie();
+			p.loadMap(data);
+			
+			return p;
+		}
+		
+		return null;
+	}
+	
 	public Propertie[] getProperties(Integer ax, Integer ay, Integer bx, Integer by) {
 		
 		long start = System.nanoTime();
