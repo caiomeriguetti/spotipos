@@ -15,6 +15,11 @@ import spotipos.model.Propertie;
 public class PropertiesServiceImpl implements PropertiesService {
 	private Jedis jedis = new Jedis("localhost");
 	
+	/**
+	 * Check if the point (x, y) is inside the rectangle (A, B)
+	 * where A = (ax, ay) is the upperLeft point and B = (bx, by)
+	 * is the lowerRight point
+	 * */
 	private boolean isInside(int x, int y, int ax, int ay, int bx, int by) {
 
 		if (x >= ax && y <= ay && x <= bx && y >= by) {
@@ -24,6 +29,9 @@ public class PropertiesServiceImpl implements PropertiesService {
 		return false;
 	}
 	
+	/**
+	 * Validate a propertie and return the list of errors
+	 * */
 	private String[] validate(Propertie p) {
 		List<String> validationResult = new ArrayList<String>();
 
@@ -67,6 +75,9 @@ public class PropertiesServiceImpl implements PropertiesService {
 		
 	}
 	
+	/**
+	 * Create a propertie
+	 * */
 	public Propertie create(Propertie data) throws InvalidPropertieException {
 		
 		//validating propertie
@@ -123,6 +134,9 @@ public class PropertiesServiceImpl implements PropertiesService {
 		return data;
 	}
 	
+	/**
+	 * Get a propertie by id
+	 * */
 	public Propertie getPropertie(String id) {
 		Map<String, String> data = jedis.hgetAll("properties-data:" + id);
 		
@@ -136,6 +150,10 @@ public class PropertiesServiceImpl implements PropertiesService {
 		return null;
 	}
 	
+	/**
+	 * Return a list of properties inside the rectangle (A, B)
+	 * A = upperLeft na B = lowerRight
+	 * */
 	public Propertie[] getProperties(Integer ax, Integer ay, Integer bx, Integer by) {
 		
 		long start = System.nanoTime();
