@@ -13,5 +13,6 @@ public class GlobalHeadersFilter implements ContainerResponseFilter {
         throws IOException {
     	responseContext.getHeaders().add("Access-Control-Allow-Origin", "*");
     	responseContext.getHeaders().add("Access-Control-Allow-Methods", "PUT, DELETE, POST, GET");
+    	responseContext.getHeaders().add("Allow", "PUT, DELETE, POST, GET");
     }
 }

@@ -1,10 +1,12 @@
 package spotipos.services;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import exceptions.InvalidPropertieException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
@@ -20,6 +22,78 @@ public class PropertiesServiceImpl implements PropertiesService {
 		}
 		
 		return false;
+	}
+	
+	private String[] validate(Propertie p) {
+		List<String> validationResult = new ArrayList<String>();
+
+		if (p.getX() == null) {
+			validationResult.add("X coordinate must be greater or equals to zero");
+		}
+		
+		if (p.getY() == null) {
+			validationResult.add("Y coordinate must be greater or equals to zero");
+		}
+		
+		if (p.getTitle() == null || p.getTitle().isEmpty()) {
+			validationResult.add("Title cannot be empty");
+		}
+		
+		if (p.getDescription() == null || p.getDescription().isEmpty()) {
+			validationResult.add("Description cannot be empty");
+		}
+		
+		if (p.getPrice() == null) {
+			validationResult.add("Price must be grater or equals to zero");
+		}
+		
+		if (p.getSquareMeters() == null) {
+			validationResult.add("SquareMeters must be grater than zero");
+		}
+		
+		if (p.getBaths() == null) {
+			validationResult.add("Baths must be grater or equals to one");
+		}
+		
+		if (p.getBeds() == null) {
+			validationResult.add("Beds must be grater or equals to one");
+		}
+		
+		
+		String[] validation = new String[validationResult.size()];
+		validationResult.toArray(validation);
+		
+		return validation;
+		
+	}
+	
+	public Propertie create(Propertie data) throws InvalidPropertieException {
+		
+		String[] validation = validate(data);
+		
+		if (validation.length > 0) {
+			//invalid
+			throw new InvalidPropertieException(validation, "Invalid Propertie");
+		}
+		
+		String newId = "prop-" + Long.toString(jedis.incr("idcounter"));
+		data.setId(newId);
+		
+		String newPropertieKey = "properties-data:" + newId;
+		
+		Pipeline pipe = jedis.pipelined();
+		pipe.hset(newPropertieKey, "id", newId);
+		pipe.hset(newPropertieKey, "x", Integer.toString(data.getX()));
+		pipe.hset(newPropertieKey, "y", Integer.toString(data.getY()));
+		pipe.hset(newPropertieKey, "beds", Integer.toString(data.getBeds()));
+		pipe.hset(newPropertieKey, "baths", Integer.toString(data.getBaths()));
+		pipe.hset(newPropertieKey, "squareMeters", Integer.toString(data.getSquareMeters()));
+		pipe.hset(newPropertieKey, "price", Long.toString(data.getPrice()));
+		pipe.hset(newPropertieKey, "title", data.getTitle());
+		pipe.hset(newPropertieKey, "description", data.getDescription());
+		pipe.sync();
+		
+		return data;
 	}
 	
 	public Propertie getPropertie(String id) {
