@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.Response;
 import spotipos.model.Propertie;
 
 public class PropertiesServiceImpl implements PropertiesService {
@@ -152,8 +154,17 @@ public class PropertiesServiceImpl implements PropertiesService {
 		//Set<String> allIds = jedis.smembers("allids");
 		
 		List<Propertie> properties = new ArrayList<Propertie>();
+		Pipeline pipe = jedis.pipelined();
+		List<Response<Map<String, String>>> responses = new ArrayList<>();
 		for(String id: allIds) {
-			Map<String, String> data = jedis.hgetAll("properties-data:" + id);
+			Response<Map<String, String>> data = pipe.hgetAll("properties-data:" + id);
+			responses.add(data);
+		}
+		
+		pipe.sync(); 
+		
+		for (Response<Map<String, String>> response: responses) {
+			Map<String, String> data = response.get();
 			Propertie p = new Propertie();
 			p.loadMap(data);
 			
