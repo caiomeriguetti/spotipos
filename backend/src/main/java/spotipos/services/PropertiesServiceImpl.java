@@ -35,12 +35,12 @@ public class PropertiesServiceImpl implements PropertiesService {
 	private String[] validate(Propertie p) {
 		List<String> validationResult = new ArrayList<String>();
 
-		if (p.getX() == null) {
-			validationResult.add("X coordinate must be greater or equals to zero");
+		if (p.getX() == null || p.getX() < 0 || p.getX() > 1400 ) {
+			validationResult.add("X coordinate must be between 0 and 1400");
 		}
 		
-		if (p.getY() == null) {
-			validationResult.add("Y coordinate must be greater or equals to zero");
+		if (p.getY() == null || p.getY() < 0 || p.getY() > 1000 ) {
+			validationResult.add("Y coordinate must be between 0 and 1000");
 		}
 		
 		if (p.getTitle() == null || p.getTitle().isEmpty()) {
@@ -51,20 +51,20 @@ public class PropertiesServiceImpl implements PropertiesService {
 			validationResult.add("Description cannot be empty");
 		}
 		
-		if (p.getPrice() == null) {
+		if (p.getPrice() == null || p.getPrice() < 0) {
 			validationResult.add("Price must be grater or equals to zero");
 		}
 		
-		if (p.getSquareMeters() == null) {
-			validationResult.add("SquareMeters must be grater than zero");
+		if (p.getSquareMeters() == null || p.getSquareMeters() < 20 || p.getSquareMeters() > 240) {
+			validationResult.add("SquareMeters must be between 20 and 240");
 		}
 		
-		if (p.getBaths() == null) {
-			validationResult.add("Baths must be grater or equals to one");
+		if (p.getBaths() == null || p.getBaths() < 1 || p.getBaths() > 4) {
+			validationResult.add("Baths must be between 1 and 4");
 		}
 		
-		if (p.getBeds() == null) {
-			validationResult.add("Beds must be grater or equals to one");
+		if (p.getBeds() == null || p.getBeds() < 1 || p.getBeds() > 5) {
+			validationResult.add("Beds must be between 1 and 5");
 		}
 		
 		
