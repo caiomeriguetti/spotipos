@@ -15,6 +15,16 @@ import spotipos.model.Propertie;
 public class PropertiesServiceImpl implements PropertiesService {
 	private Jedis jedis = new Jedis("localhost");
 	
+	private static String KEY_PROPERTIES_DATA = "properties-data";
+	private static String KEY_ID_COUNTER = "idcounter";
+	private static String KEY_ALL_PARTITIONS = "allpartitions";
+	private static String KEY_PARTITION = "partition";
+	private static String KEY_IDS_BY_PARTITION= "idsByPartition";
+	private static String KEY_ALL_IDS = "allids";
+	private static String KEY_PROVINCE_DATA = "province-data";
+	private static String KEY_PROVINCES_BY_ID= "provincesById";
+	
+	
 	/**
 	 * Check if the point (x, y) is inside the rectangle (A, B)
 	 * where A = (ax, ay) is the upperLeft point and B = (bx, by)
@@ -89,10 +99,10 @@ public class PropertiesServiceImpl implements PropertiesService {
 		}
 		
 		//creating new propertie
-		String newId = "prop-" + Long.toString(jedis.incr("idcounter"));
+		String newId = "prop-" + Long.toString(jedis.incr(KEY_ID_COUNTER));
 		data.setId(newId);
 		
-		String newPropertieKey = "properties-data:" + newId;
+		String newPropertieKey = KEY_PROPERTIES_DATA + ":" + newId;
 		
 		Pipeline pipe = jedis.pipelined();
 		pipe.hset(newPropertieKey, "id", newId);
@@ -107,10 +117,10 @@ public class PropertiesServiceImpl implements PropertiesService {
 		pipe.sync();
 		
 		//finding propertie partition
-		List<String> allPartitions = jedis.lrange("allpartitions", 0, -1);
+		List<String> allPartitions = jedis.lrange(KEY_ALL_PARTITIONS, 0, -1);
 		Map<String, Response<Map<String, String>>> allPartitionsData = new HashMap<>();
 		for (String partitionId: allPartitions) { 
-			allPartitionsData.put(partitionId, pipe.hgetAll("partition:" + partitionId));
+			allPartitionsData.put(partitionId, pipe.hgetAll(KEY_PARTITION + ":" + partitionId));
 		}
 		pipe.sync();
 		
@@ -124,8 +134,8 @@ public class PropertiesServiceImpl implements PropertiesService {
 			int bry = Integer.parseInt(partitionData.get("bry"));
 			
 			if (isInside(data.getX(), data.getY(), ulx, uly, brx, bry)) {
-				pipe.sadd("idsByPartition:" + partitionId, data.getId());
-				pipe.sadd("allids", data.getId());
+				pipe.sadd(KEY_IDS_BY_PARTITION + ":" + partitionId, data.getId());
+				pipe.sadd(KEY_ALL_IDS, data.getId());
 			}
 		}
 		
@@ -144,14 +154,14 @@ public class PropertiesServiceImpl implements PropertiesService {
 		List<String> selectedProvinces = new ArrayList<>();
 		
 		for (String provinceName: provinceNames) {
-			Map<String, String> provinceData = jedis.hgetAll("province-data:" + provinceName);
+			Map<String, String> provinceData = jedis.hgetAll(KEY_PROVINCE_DATA + ":" + provinceName);
 			Integer ulx = Integer.parseInt(provinceData.get("ulx"));
 			Integer uly = Integer.parseInt(provinceData.get("uly"));
 			Integer brx = Integer.parseInt(provinceData.get("brx"));
 			Integer bry = Integer.parseInt(provinceData.get("bry"));
 			
 			if (isInside(data.getX(), data.getY(), ulx, uly, brx, bry)) {
-				pipe.sadd("provincesById:" + data.getId(), provinceName);
+				pipe.sadd(KEY_PROVINCES_BY_ID + ":" + data.getId(), provinceName);
 			}
 		}
 		
@@ -161,7 +171,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 	}
 	
 	private void loadProvinces(Propertie p) {
-		Set<String> provinces = jedis.smembers("provincesById:"+p.getId());
+		Set<String> provinces = jedis.smembers(KEY_PROVINCES_BY_ID + ":"+p.getId());
 		String[] provincesArray = new String[provinces.size()];
 		provinces.toArray(provincesArray);
 		p.setProvinces(provincesArray);
@@ -171,7 +181,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 	 * Get a propertie by id
 	 * */
 	public Propertie getPropertie(String id) {
-		Map<String, String> data = jedis.hgetAll("properties-data:" + id);
+		Map<String, String> data = jedis.hgetAll(KEY_PROPERTIES_DATA + ":" + id);
 		
 		if (data != null) {
 			Propertie p = new Propertie();
@@ -192,7 +202,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 		
 		long start = System.nanoTime();
 		
-		List<String> allPartitions = jedis.lrange("allpartitions", 0, -1);
+		List<String> allPartitions = jedis.lrange(KEY_ALL_PARTITIONS, 0, -1);
 		List<String> paritionsToSearch = new ArrayList<>();
 		
 		// selection area points, s1, s2, s3, s4
@@ -209,7 +219,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 		int s4y = by;
 		
 		for (String partitionId: allPartitions) {
-			Map<String, String> bounds = jedis.hgetAll("partition:" + partitionId);
+			Map<String, String> bounds = jedis.hgetAll(KEY_PARTITION + ":" + partitionId);
 			
 			int ulx = Integer.parseInt(bounds.get("ulx"));
 			int uly = Integer.parseInt(bounds.get("uly"));
@@ -305,7 +315,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 		
 		Set<String> allIds = null;
 		for (String partitionId: paritionsToSearch) {
-			Set<String> propertiesIds = jedis.smembers("idsByPartition:" + partitionId);
+			Set<String> propertiesIds = jedis.smembers(KEY_IDS_BY_PARTITION + ":" + partitionId);
 			
 			if (allIds == null) {
 				allIds = propertiesIds;
@@ -321,7 +331,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 		Pipeline pipe = jedis.pipelined();
 		List<Response<Map<String, String>>> responses = new ArrayList<>();
 		for(String id: allIds) {
-			Response<Map<String, String>> data = pipe.hgetAll("properties-data:" + id);
+			Response<Map<String, String>> data = pipe.hgetAll(KEY_PROPERTIES_DATA + ":" + id);
 			responses.add(data);
 		}
 		
