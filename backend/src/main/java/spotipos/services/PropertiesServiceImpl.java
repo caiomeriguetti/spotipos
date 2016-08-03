@@ -131,7 +131,40 @@ public class PropertiesServiceImpl implements PropertiesService {
 		
 		pipe.sync();
 		
+		//finding province
+		
+		String[] provinceNames = new String[6];
+		provinceNames[0] = "Groola";
+		provinceNames[1] = "Jaby";
+		provinceNames[2] = "Groola";
+		provinceNames[3] = "Gode";
+		provinceNames[4] = "Nova";
+		provinceNames[5] = "Scavy";
+		
+		List<String> selectedProvinces = new ArrayList<>();
+		
+		for (String provinceName: provinceNames) {
+			Map<String, String> provinceData = jedis.hgetAll("province-data:" + provinceName);
+			Integer ulx = Integer.parseInt(provinceData.get("ulx"));
+			Integer uly = Integer.parseInt(provinceData.get("uly"));
+			Integer brx = Integer.parseInt(provinceData.get("brx"));
+			Integer bry = Integer.parseInt(provinceData.get("bry"));
+			
+			if (isInside(data.getX(), data.getY(), ulx, uly, brx, bry)) {
+				pipe.sadd("provincesById:" + data.getId(), provinceName);
+			}
+		}
+		
+		pipe.sync();
+		
 		return data;
+	}
+	
+	private void loadProvinces(Propertie p) {
+		Set<String> provinces = jedis.smembers("provincesById:"+p.getId());
+		String[] provincesArray = new String[provinces.size()];
+		provinces.toArray(provincesArray);
+		p.setProvinces(provincesArray);
 	}
 	
 	/**
@@ -143,6 +176,7 @@ public class PropertiesServiceImpl implements PropertiesService {
 		if (data != null) {
 			Propertie p = new Propertie();
 			p.loadMap(data);
+			loadProvinces(p);
 			
 			return p;
 		}
@@ -297,6 +331,8 @@ public class PropertiesServiceImpl implements PropertiesService {
 			Map<String, String> data = response.get();
 			Propertie p = new Propertie();
 			p.loadMap(data);
+			
+			loadProvinces(p);
 			
 			if (isInside(p.x, p.y, ax, ay, bx, by)) {
 				properties.add(p);

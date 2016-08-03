@@ -17,6 +17,7 @@ public class Propertie {
 	public Integer baths;
 	public Integer squareMeters;
 	public Long price;
+	public String[] provinces;
     
     public String getId() {
 		return id;
@@ -179,6 +180,14 @@ public class Propertie {
     		description = dataDescription;
     	}
     }
+	
+	public void setProvinces(String[] provinces) {
+		this.provinces = provinces;
+	}
+	
+	public String[] getProvinces() {
+		return this.provinces;
+	}
 
 	public String getTitle() {
 		return title;
